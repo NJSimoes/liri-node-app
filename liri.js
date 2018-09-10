@@ -8,6 +8,8 @@
 require("dotenv");
 require("node-spotify-api");
 require("mdash-node");
+require("bandsintown");
+
 
 
 // code required to import the `keys.js` file and store it in a variable.
@@ -15,6 +17,8 @@ require("mdash-node");
 
 var spotify = require('./keys.js')
 var request = require("request");
+var BandAppID = require('./keys.js');
+
 
 
 //Make it so liri.js can take in one of the following commands:
@@ -24,24 +28,38 @@ var request = require("request");
 // `movie-this`
 // `do-what-it-says`
 
-ask = process.argv[2];
-data = process.argv[3];
+var ask = process.argv[2];
+
+// To handle multiple words in the node argument (ask), store all of the arguments in an array
+var nodeArgs = process.argv;
+
+// Create an empty variable for holding the name
+var data = "";
+
+// Loop through all the words in the node argument
+for (var i = 3; i < nodeArgs.length; i++) {
+
+  if (i > 3 && i < nodeArgs.length) {
+    // And include the "+"s
+    data = data + "+" + nodeArgs[i];
+
+  }
+
+  else {
+
+    data += nodeArgs[i];
+
+  }
+}
+
 console.log(ask);
 console.log(data);
 console.log(spotify);
 
-debugger;
 
 // =============================================================
 
 // search Spotify for songs. `node liri.js spotify-this-song '<song name here>'`
-
-if (ask === "spotify-this-song") {
-
-console.log("spotify-this-song action selected correctly");
-
-}
-
 //   * This will show the following information about the song in your terminal/bash window
 //     * Artist(s)
 //     * The song's name
@@ -60,15 +78,33 @@ console.log("spotify-this-song action selected correctly");
 //      * Step Four: On the next screen, scroll down to where you see your client id and client secret. Copy these values down somewhere, you'll need them to use
 //          the Spotify API and the [node-spotify-api package](https://www.npmjs.com/package/node-spotify-api).
 
+
+if (ask === "spotify-this-song") {
+
+    console.log("spotify-this-song action selected correctly");
+
+    spotify.search({ type: 'track', query: data }, function(err, songData) {
+        if (err) {
+          return console.log('Error occurred: ' + err);
+        }
+       
+      console.log(songData); 
+      });
+      
+
+}
+
+
 // =============================================================
 
 // search Bands in Town for concerts.  `node liri.js concert-this <artist/band name here>`
 
+
 if (ask === "concert-this") {
 
-    console.log("spotify-this-song action selected correctly");
-    
-    }
+    console.log("concert-this action selected correctly");
+
+}
 
 //   * This will search the Bands in Town Artist Events API (`"https://rest.bandsintown.com/artists/" + artist + "/events?app_id=codingbootcamp"`) for an artist and render the following information about each event to the terminal:
 //   * Name of the venue
@@ -80,7 +116,7 @@ if (ask === "concert-this") {
 // =============================================================
 
 
-// searxh OMDB for movies.  This will output the following information to your terminal/bash window:
+// search OMDB for movies to output the following information to the terminal/bash window:
 //  * Title of the movie.
 //  * Year the movie came out.
 //  * IMDB Rating of the movie.
@@ -90,56 +126,64 @@ if (ask === "concert-this") {
 //  * Plot of the movie.
 //  * Actors in the movie.
 
-// * If the user doesn't type a movie in, the program will output data for the movie 'Mr. Nobody.'
-
-// * If you haven't watched "Mr. Nobody," then you should: <http://www.imdb.com/title/tt0485947/>
-
-// * It's on Netflix!
-
-// * You'll use the request package to retrieve data from the OMDB API. Like all of the in-class activities, the OMDB API requires an API key. You may use `trilogy`.
+//  * use the request package to retrieve data from the OMDB API. Like all of the in-class activities, the OMDB API requires an API key. You may use `trilogy`.
 
 
-else if (ask === "movie-this") {
+if (ask === "movie-this") {
+console.log(data)
+    if (data != undefined) {
+        console.log("data is "+data)
+        // build the URL
+        movieURL = ("http://www.omdbapi.com/?t=" + data + "&y=&plot=short&apikey=trilogy");
+        // run a request to the OMDB API with the movie specified
+        request(movieURL, function (error, response, body) {
 
-    console.log("movie-this action selected correctly");
+            // If the request is successful (i.e. if the response status code is 200)
+            if (!error && response.statusCode === 200) {
 
-    // run a request to the OMDB API with the movie specified
+                console.log("Movie Title:                           " + JSON.parse(body).Title);
+                console.log("Release Year:                          " + JSON.parse(body).Year);
+                console.log("IMDB Rating:                           " + JSON.parse(body).imdbRating);
+//                console.log("Rotten Tomatoes Rating: " + JSON.parse(body).Ratings.Source.Rotten Tomatoes.Value);
+                console.log("Country where the movie was produced:  " + JSON.parse(body).Country);
+                console.log("Movie's Language:                      " + JSON.parse(body).Language);
+                console.log("Movie's Plot:                          " + JSON.parse(body).Plot);
+                console.log("Movie's Actors:                        " + JSON.parse(body).Actors);
 
-    movieURL = ("http://www.omdbapi.com/?t=" + data + "&y=&plot=short&apikey=trilogy");
-    console.log(movieURL);
-    request("http://www.omdbapi.com/?t=babe&y=&plot=short&apikey=trilogy", function(error, response, body) {
-
-    // If the request is successful (i.e. if the response status code is 200)
-    if (!error && response.statusCode === 200) {
-  
-      // Parse the body of the site and recover just the imdbRating
-      // (Note: The syntax below for parsing isn't obvious. Just spend a few moments dissecting it).
-//      console.log("The movie's rating is: " + JSON.parse(body).imdbRating);
-
-    console.log("Movie Title: " + JSON.parse(body).Title);
-    console.log("Release Year: " + JSON.parse(body).Year);
-    console.log("Country where the movie was produced: " + JSON.parse(body).Country);
-    console.log("Movie's Language: " + JSON.parse(body).Language)
-    console.log("Movie's Language: " + JSON.parse(body).Language)
-
-    ;
-
-
+            }
+        })
     }
-  });
-    
+    // * If the user doesn't type a movie in, the program will output data for the movie 'Mr. Nobody.'
 
+    else {
+        console.log("no data "+data)
+
+        request("http://www.omdbapi.com/?t=Mr%20Nobody&y=&plot=short&apikey=trilogy", function (error, response, body) {
+            //    request("http://www.omdbapi.com/?t=remember+the+titans&y=&plot=short&apikey=trilogy", function(error, response, body) {
+
+            if (!error && response.statusCode === 200) {
+
+                console.log("Movie Title: " + JSON.parse(body).Title);
+                console.log("Release Year: " + JSON.parse(body).Year);
+                console.log("Country where the movie was produced: " + JSON.parse(body).Country);
+                console.log("Movie's Language: " + JSON.parse(body).Language);
+                console.log("Movie's Plot: " + JSON.parse(body).Plot);
+                console.log("Movie's Actors: " + JSON.parse(body).Actors);
+            }
+        })
     }
+};
+
 
 // =============================================================
 
 // do 'do-what-it-says`
 
-else if (ask === "do-what-it-says") {
+if (ask === "do-what-it-says") {
 
-    console.log("spotify-this-song action selected correctly");
-    
-    }
+    console.log("do-what-it-says action selected correctly");
+
+}
 
 // =============================================================
 // error handling
