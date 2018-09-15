@@ -2,7 +2,19 @@
   "name": "liri-node-app",
   "version": "1.0.0",
   "description": "Homework 10 - liri-node-app",
-  "main": "index.js",
+  "main": "concert-this.js",
+  "dependencies": {
+    "bandsintown": "^1.0.1",
+    "dotenv": "^6.0.0",
+    "env": "0.0.2",
+    "mdash": "^0.1.3",
+    "mdash-node": "^1.0.1",
+    "moment": "^2.22.2",
+    "node-spotify-api": "^1.0.7",
+    "request": "^2.88.0",
+    "spotify": "^0.3.0"
+  },
+  "devDependencies": {},
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -16,15 +28,5 @@
   "bugs": {
     "url": "https://github.com/NJSimoes/liri-node-app/issues"
   },
-  "homepage": "https://github.com/NJSimoes/liri-node-app#readme",
-  "dependencies": {
-    "bandsintown": "^1.0.1",
-    "dotenv": "^6.0.0",
-    "mdash": "^0.1.3",
-    "mdash-node": "^1.0.1",
-    "moment": "^2.22.2",
-    "node-spotify-api": "^1.0.7",
-    "request": "^2.88.0",
-    "spotify": "^0.3.0"
-  }
+  "homepage": "https://github.com/NJSimoes/liri-node-app#readme"
 }

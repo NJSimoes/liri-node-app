@@ -1,23 +1,19 @@
-// ### Minimum Requirements
-// Attempt to complete homework assignment as described in instructions. If unable to complete certain portions, please pseudocode these portions to describe what remains to be completed. Adding a README.md as well as adding this homework to your portfolio are required as well and more information can be found below.
-
-// ==============================================================
-
+// clear console screen
+console.clear();
 // code to read and set any environment variables with the dotenv package:
-
 require("dotenv");
 require("node-spotify-api");
-require("mdash-node");
 require("bandsintown");
-
-
+require("dotenv").config();
 
 // code required to import the `keys.js` file and store it in a variable.
-// You should be able to access your keys information like so
 
-var spotify = require('./keys.js')
 var request = require("request");
-var BandAppID = require('./keys.js');
+var keys = require('./keys.js')
+var Spotify = require('node-spotify-api');
+var spotify = new Spotify(keys.spotify);
+var moment = require("moment");
+var bandsInTown = require('bandsintown')(keys.BandAppID);
 
 
 
@@ -32,30 +28,15 @@ var ask = process.argv[2];
 
 // To handle multiple words in the node argument (ask), store all of the arguments in an array
 var nodeArgs = process.argv;
-
 // Create an empty variable for holding the name
 var data = "";
-
 // Loop through all the words in the node argument
 for (var i = 3; i < nodeArgs.length; i++) {
-
-  if (i > 3 && i < nodeArgs.length) {
-    // And include the "+"s
-    data = data + "+" + nodeArgs[i];
-
-  }
-
-  else {
-
-    data += nodeArgs[i];
-
-  }
+    if (i > 3 && i < nodeArgs.length) {
+        // And include the "+"s
+        data = data + "+" + nodeArgs[i];
+    } else { data += nodeArgs[i]; }
 }
-
-console.log(ask);
-console.log(data);
-console.log(spotify);
-
 
 // =============================================================
 
@@ -77,36 +58,74 @@ console.log(spotify);
 //          with the Spotify API. You can fill in whatever you'd like for these fields. When finished, click the "complete" button.
 //      * Step Four: On the next screen, scroll down to where you see your client id and client secret. Copy these values down somewhere, you'll need them to use
 //          the Spotify API and the [node-spotify-api package](https://www.npmjs.com/package/node-spotify-api).
-
+// 1)
 
 if (ask === "spotify-this-song") {
-
-    console.log("spotify-this-song action selected correctly");
-
-    spotify.search({ type: 'track', query: data }, function(err, songData) {
+    var song = process.argv[3];
+    if (song == null) {
+        var song = "The Sign";
+    }
+    spotify.search({ type: 'track', query: song }, function (err, data) {
         if (err) {
-          return console.log('Error occurred: ' + err);
+            return console.log('Error occurred: ' + err);
         }
-       
-      console.log(songData); 
-      });
-      
+        //     * The song's name
+        console.log("Song........: " + song);
+        //     * Artist(s)
+        console.log("Artist......: " + data.tracks.items[0].album.artists[0].name);
+        //     * A preview link of the song from Spotify
+        console.log("URL link....: " + data.tracks.items[0].album.artists[0].external_urls.spotify);
+        //     * The album that the song is from
+        console.log("Album name..: " + data.tracks.items[0].album.name + "\n\n");
+
+
+    });
 
 }
-
 
 // =============================================================
 
-// search Bands in Town for concerts.  `node liri.js concert-this <artist/band name here>`
-
+//  search Bands in Town for concerts.  `node liri.js concert-this <artist/band name here>`
+// 2
 
 if (ask === "concert-this") {
 
-    console.log("concert-this action selected correctly");
+    var bandName = process.argv[3]
+    if (bandName) {
+        bandsInTown
+            .getArtistEventList(bandName)
+            .then(function (events) {
 
+                // use  a for/in loop to get all concerts
+                //   * Name of the venue
+                //   * Venue location
+                //   * Date of the Event (use moment to format this as "MM/DD/YYYY")
+
+                for (events.id in events) {
+
+                    //   * Name of the venue
+                    concertVenue = events[events.id].venue.place;
+                    //   * Venue location
+                    concertLocation = events[events.id].formatted_location;
+                    //   * Concert Date
+                    concertDate = events[events.id].datetime;
+                    console.log("Date......: " + (moment(concertDate).format("MM/DD/YY")));
+                    console.log("Venue.....: " + concertVenue);
+                    console.log("Location..: " + concertLocation);
+                    console.log("==========================================");
+                }
+
+            });
+    } else {
+        console.log("No Band or Artist name entered.  Feel free to retry with a Band or Artist's name \n\n")
+
+    }
 }
 
-//   * This will search the Bands in Town Artist Events API (`"https://rest.bandsintown.com/artists/" + artist + "/events?app_id=codingbootcamp"`) for an artist and render the following information about each event to the terminal:
+
+
+//   * This will search the Bands in Town Artist Events API (`"https://rest.bandsintown.com/artists/" + artist +
+//   "/events?app_id=codingbootcamp"`) for an artist and render the following information about each event to the terminal:
 //   * Name of the venue
 //   * Venue location
 //   * Date of the Event (use moment to format this as "MM/DD/YYYY")
@@ -127,12 +146,12 @@ if (ask === "concert-this") {
 //  * Actors in the movie.
 
 //  * use the request package to retrieve data from the OMDB API. Like all of the in-class activities, the OMDB API requires an API key. You may use `trilogy`.
-
+// 3)
 
 if (ask === "movie-this") {
-console.log(data)
-    if (data != undefined) {
-        console.log("data is "+data)
+    // * If the user doesn't type a movie in, the program will output data for the movie 'Mr. Nobody.'
+    if (data == false) {data = "Mr. Nobody"}
+    if (data) {
         // build the URL
         movieURL = ("http://www.omdbapi.com/?t=" + data + "&y=&plot=short&apikey=trilogy");
         // run a request to the OMDB API with the movie specified
@@ -141,34 +160,14 @@ console.log(data)
             // If the request is successful (i.e. if the response status code is 200)
             if (!error && response.statusCode === 200) {
 
-                console.log("Movie Title:                           " + JSON.parse(body).Title);
-                console.log("Release Year:                          " + JSON.parse(body).Year);
-                console.log("IMDB Rating:                           " + JSON.parse(body).imdbRating);
-//                console.log("Rotten Tomatoes Rating: " + JSON.parse(body).Ratings.Source.Rotten Tomatoes.Value);
-                console.log("Country where the movie was produced:  " + JSON.parse(body).Country);
-                console.log("Movie's Language:                      " + JSON.parse(body).Language);
-                console.log("Movie's Plot:                          " + JSON.parse(body).Plot);
-                console.log("Movie's Actors:                        " + JSON.parse(body).Actors);
-
-            }
-        })
-    }
-    // * If the user doesn't type a movie in, the program will output data for the movie 'Mr. Nobody.'
-
-    else {
-        console.log("no data "+data)
-
-        request("http://www.omdbapi.com/?t=Mr%20Nobody&y=&plot=short&apikey=trilogy", function (error, response, body) {
-            //    request("http://www.omdbapi.com/?t=remember+the+titans&y=&plot=short&apikey=trilogy", function(error, response, body) {
-
-            if (!error && response.statusCode === 200) {
-
-                console.log("Movie Title: " + JSON.parse(body).Title);
-                console.log("Release Year: " + JSON.parse(body).Year);
-                console.log("Country where the movie was produced: " + JSON.parse(body).Country);
-                console.log("Movie's Language: " + JSON.parse(body).Language);
-                console.log("Movie's Plot: " + JSON.parse(body).Plot);
-                console.log("Movie's Actors: " + JSON.parse(body).Actors);
+                console.log("Movie Title...........................: " + JSON.parse(body).Title);
+                console.log("Release Year..........................: " + JSON.parse(body).Year);
+                console.log("IMDB Rating...........................: " + JSON.parse(body).imdbRating);
+                console.log("Country where the movie was produced..: " + JSON.parse(body).Country);
+                console.log("Movie's Language......................: " + JSON.parse(body).Language);
+                console.log("Movie's Plot..........................: " + JSON.parse(body).Plot);
+                console.log("Movie's Actors........................: " + JSON.parse(body).Actors);
+                console.log("\n\n")
             }
         })
     }
@@ -178,6 +177,7 @@ console.log(data)
 // =============================================================
 
 // do 'do-what-it-says`
+// 4)
 
 if (ask === "do-what-it-says") {
 
